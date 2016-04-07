@@ -5,27 +5,26 @@ module.exports = function(grunt){
 
   grunt.initConfig({
     pkg: grunt.file.readJSON('package.json'),
-    connect: {
-      options: {
-        port: 9000,
-        hostname: '*', //默认就是这个值，可配置为本机某个 IP，localhost 或域名
-        livereload: 35729  //声明给 watch 监听的端口
-      },
-
-      server: {
+    connect: {//任务：打开浏览器，同时使用livereload来使浏览器无需f5就可以刷新。
         options: {
-          open: true, //自动打开网页 http://
-          base: [
-            'app'  //主目录
-          ]
+            port: 9000,
+            hostname: '*', //默认就是这个值，可配置为本机某个 IP，localhost 或域名
+            livereload: 35729  //声明给 watch 监听的端口
+        },
+        server: {
+            options: {
+                open: true, //自动打开网页 http://
+                base: [
+                    'app'  //主目录
+                ]
+            }
         }
-      }
     },
     uglify: {
         options: {
             banner: '/*! <%= pkg.name %> <%= grunt.template.today("yyyy-mm-dd") %> */\n'//添加banner
         },
-        build: {//任务一：压缩a.js，不混淆变量名，保留注释，添加banner和footer
+        build: {//任务：压缩*.js，不混淆变量名，保留注释，添加banner和footer
             options: {
                 mangle: false, //不混淆变量名
                 preserveComments: 'all', //不删除注释，还可以为 false（删除全部注释），some（保留@preserve @license @cc_on等注释）
@@ -39,7 +38,7 @@ module.exports = function(grunt){
                 ext: '.min.js'
             }]
         },
-        release: {//任务四：合并压缩a.js和b.js
+        release: {//任务：合并压缩所有js
             files:[{
                 src: ['app/js/*.min.js'],
                 dest: 'app/js-min/all.min.js'
@@ -47,38 +46,35 @@ module.exports = function(grunt){
         }
     },
     less: {
-      development: {
-          options: {
-              paths: ["app/css"]
-          },
-          files: [{
-              expand: true,
-              cwd: 'app/less',
-              src: ['**/*.less'],
-              dest: 'app/css',
-              ext: '.css'
-          }]
-          // files: {
-          //   "app/css/index.css": "app/less/index.less"
-          // }
-      }
+        development: {//任务：将所有less文件编译为css
+            options: {
+                paths: ["app/css"]
+            },
+            files: [{
+                expand: true,
+                cwd: 'app/less',
+                src: ['**/*.less'],
+                dest: 'app/css',
+                ext: '.css'
+            }]
+        }
     },
     watch: {
-        less: {
+        less: {//任务：监听less文件所在文件夹，如果改动了则触发less任务
             files: ['app/less/*.less'],
             tasks: ['less'],
             options: {
-                livereload: true
+                livereload: true//暂不清楚在此处的作用，一般是与浏览器实时刷新时用到livereload文件
             }
         },
-        uglify: {
+        uglify: {//任务：监听js文件所在文件夹，如果js文件（.min.js除外）被修改，则触发uglify任务
             files: ['app/js/*.js', '!app/js/*.min.js'],
             tasks: ['uglify'],
             options: {
                 livereload: true
             }
         },
-        livereload: {
+        livereload: {//任务：监听所有文件的改动，触发任务使浏览器实时刷新
             options: {
                 livereload: '<%=connect.options.livereload%>'  //监听前面声明的端口  35729
             },
@@ -100,14 +96,18 @@ module.exports = function(grunt){
     }
   });
 
+  //注册任务，命令行输入“grunt serve”即可执行数组中的内容。开启webserver服务并监听文件的改动自动刷新浏览器
   grunt.registerTask('serve', [
       'connect:server',
       'watch:livereload'
   ]);
+
+  //注册任务，命令行输入“grunt doless”即可将less编译为css文件，并且自动监听less文件的修改自动编译为css
   grunt.registerTask('doless', [
       'less',
       'watch:less'
   ]);
+  //注册任务，命令行输入“grunt douglify”即可将js进行压缩、混淆、合并，并且自动监听js文件的修改自动处理
   grunt.registerTask('douglify', [
       'uglify:build',
       'uglify:release',

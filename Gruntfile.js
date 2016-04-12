@@ -20,6 +20,20 @@ module.exports = function(grunt){
             }
         }
     },
+    babel: {
+        options: {
+            sourceMap: true
+        },
+        dist: {
+            files: [{
+                expand: true,
+                cwd: 'app/js',
+                src: ['**/*.js', '!**/*.min.js'],
+                dest: 'app/dist',
+                ext: '.js'
+            }]
+        }
+    },
     uglify: {
         options: {
             banner: '/*! <%= pkg.name %> <%= grunt.template.today("yyyy-mm-dd") %> */\n'//添加banner
@@ -57,6 +71,40 @@ module.exports = function(grunt){
                 dest: 'app/css',
                 ext: '.css'
             }]
+        }
+    },
+    autoprefixer: {// 任务：自动考虑部分css属性是否要加浏览器特定前缀
+        dist : {
+            options:{
+                browsers: ['ie 8', '> 1%', 'Firefox <= 20', 'opera <= 36']
+            },
+            files: [{
+                expand: true,
+                cwd: 'app/css',
+                src: ['**/*.css', '!**/*.prefixer.css'],
+                dest: 'app/css',
+                ext: '.prefixer.css'
+            }],
+            watch: {//这一块的功能好像并没有用到，不清楚怎么调用。使用grunt watch也调用不到这里，应该是需要把这一块提取到watch中。
+                styles: {
+                    files: ['app/css/*.css', '!app/css/**/*.prefixer.css'],
+                    tasks: ['autoprefixer']
+                }
+            }
+        }
+    },
+    csslint: {//任务：检测css文件是否存在语法错误。例如display:inline-block与float属性混合使用
+        strict: {
+            options: {
+                import: 2
+            },
+            src: ['app/css/**/*.css']
+        },
+        lax: {
+            options: {
+                import: false
+            },
+            src: ['app/css/**/*.css']
         }
     },
     watch: {
@@ -113,4 +161,15 @@ module.exports = function(grunt){
       'uglify:release',
       'watch:uglify'
   ]);
+
+  grunt.registerTask('doautoprefixer', [
+      'autoprefixer'
+  ]);
+
+  grunt.registerTask('docsslint', [
+      'csslint:strict'
+  ])
+  grunt.registerTask('dobabel', [
+      'babel'
+  ])
 }
